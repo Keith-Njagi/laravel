@@ -14,7 +14,7 @@ class PostsController extends Controller
      */
     public function index()
     {
-        $posts = Post::orderBy('title', 'desc')->paginate(10);
+        $posts = Post::orderBy('created_at', 'desc')->paginate(10);
 
         return view('posts.index')->with('posts', $posts);
     }
@@ -43,7 +43,13 @@ class PostsController extends Controller
             'body' => 'required',
         ]);
 
-        return 123;
+        $post = new Post();
+        $post->title = $request->input('title');
+        $post->body = $request->input('body');
+        $post->user_id = auth()->user()->id();
+        $post->save();
+
+        return redirect('/posts')->with('success', 'Post Created');
     }
 
     /**
@@ -53,11 +59,9 @@ class PostsController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Post $post)
     {
-        $post = Post::find($id);
-
-        return view('posts.show')->with('post', $post);
+        return view('posts.show', compact('post'));
     }
 
     /**
@@ -67,8 +71,9 @@ class PostsController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit(Post $post)
     {
+        return view('posts.edit', compact('post'));
     }
 
     /**
@@ -79,8 +84,18 @@ class PostsController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Post $post)
     {
+        $this->validate($request, [
+            'title' => 'required',
+            'body' => 'required',
+        ]);
+
+        $post->title = $request->input('title');
+        $post->body = $request->input('body');
+        $post->save();
+
+        return redirect('/posts')->with('success', 'Post Updated');
     }
 
     /**
@@ -90,7 +105,10 @@ class PostsController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Post $post)
     {
+        $post->delete();
+
+        return redirect('/posts')->with('success', 'Post Removed');
     }
 }
